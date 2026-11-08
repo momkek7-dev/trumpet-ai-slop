@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trumpet Master - Trompeten & Tonleiter Trainer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brass: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            touch-action: manipulation;
+        }
+        .tuner-needle {
+            transition: transform 0.08s ease-out;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between select-none">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 sticky top-0 z-30 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-amber-500/20">
+                    🎺
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none text-slate-100">Trumpet Master</h1>
+                    <span class="text-xs text-amber-400 font-medium">Trainer & Tonleiter-Coach</span>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-2">
+                <button id="androidInfoBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition">
+                    <i class="fa-brands fa-android text-emerald-400 text-sm"></i>
+                    <span class="hidden sm:inline">Android APK</span>
+                </button>
+                <button id="settingsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-sm border border-slate-700 transition" title="Einstellungen">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-4 flex-1 flex flex-col gap-3">
+
+        <!-- Main Practice Mode Selection Tabs -->
+        <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+            <button id="modeSingleBtn" class="py-2 rounded-lg text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 shadow transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-music"></i> Einzelnoten-Training
+            </button>
+            <button id="modeScaleBtn" class="py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-layer-group"></i> Tonleiter-Trainer (Scales)
+            </button>
+        </div>
+
+        <!-- Scale Configuration Bar (Visible only in Scale Mode) -->
+        <div id="scaleConfigBar" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Grundton (Root)</label>
+                <select id="scaleRootSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                    <!-- Dynamic Root Notes -->
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tonleiter-Typ</label>
+                <select id="scaleTypeSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                    <option value="major">Dur (Major)</option>
+                    <option value="natural_minor">Natürliche Moll</option>
+                    <option value="harmonic_minor">Harmonische Moll</option>
+                    <option value="melodic_minor">Melodische Moll</option>
+                    <option value="major_pentatonic">Dur Pentatonik</option>
+                    <option value="minor_pentatonic">Moll Pentatonik</option>
+                    <option value="blues">Blues Skala</option>
+                    <option value="chromatic">Chromatisch</option>
+                </select>
+            </div>
+            <div class="col-span-2 sm:col-span-1 flex items-end">
+                <button id="resetScaleBtn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg border border-slate-700 transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left text-amber-400"></i> Tonleiter Neustarten
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Status Bar -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+            <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold">Streak</span>
+                <span id="streakDisplay" class="text-xl sm:text-2xl font-black text-amber-400 flex items-center gap-1">
+                    0 <i class="fa-solid fa-fire text-base text-amber-500"></i>
+                </span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold">Punkte</span>
+                <span id="scoreDisplay" class="text-xl sm:text-2xl font-black text-emerald-400">0</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold">Stimmung</span>
+                <span id="tuningDisplay" class="text-sm sm:text-base font-bold text-sky-400">B♭ (Bb)</span>
+            </div>
+        </div>
+
+        <!-- Target Note & Sheet Display Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col items-center relative overflow-hidden">
+            <!-- Hold Progress Bar -->
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-800">
+                <div id="holdProgressBar" class="h-full bg-emerald-400 w-0 transition-all duration-75"></div>
+            </div>
+
+            <!-- Display Controls Tabs -->
+            <div class="flex bg-slate-950 p-1 rounded-xl mb-2 border border-slate-800 text-xs font-semibold">
+                <button id="viewSheetBtn" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 shadow">Notensystem</button>
+                <button id="viewNameBtn" class="px-3 py-1 rounded-lg text-slate-400 hover:text-slate-200">Notenname</button>
+            </div>
+
+            <!-- Target Display Area -->
+            <div class="w-full flex flex-col items-center justify-center min-h-[180px] my-1">
+                
+                <!-- Native SVG Music Sheet Notation (Always Works, No External Load Failures) -->
+                <div id="sheetContainer" class="w-full flex justify-center items-center bg-slate-950/60 rounded-xl py-3 border border-slate-800/80 overflow-x-auto">
+                    <svg id="musicSvg" class="max-w-full h-auto" width="340" height="150" viewBox="0 0 340 150">
+                        <!-- Rendered by JS -->
+                    </svg>
+                </div>
+
+                <!-- Text Note Container -->
+                <div id="textNoteContainer" class="hidden flex-col items-center justify-center py-6">
+                    <span id="targetNoteText" class="text-6xl font-black text-amber-400 tracking-wider">c1</span>
+                    <span id="targetNoteSub" class="text-sm text-slate-400 mt-1">(Klingend: B♭3)</span>
+                </div>
+            </div>
+
+            <!-- Scale Steps Progress Bar (Visible in Scale Mode) -->
+            <div id="scaleStepsContainer" class="w-full hidden flex-wrap justify-center gap-1.5 my-2">
+                <!-- Scale note badges populated dynamically -->
+            </div>
+
+            <!-- Valve Fingering Diagram -->
+            <div class="mt-2 bg-slate-950/80 px-5 py-2 rounded-xl border border-slate-800 flex items-center gap-4">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ventile:</span>
+                <div id="valvesContainer" class="flex gap-2">
+                    <div id="valve1" class="w-8 h-8 rounded-full border-2 border-slate-600 bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-sm shadow">1</div>
+                    <div id="valve2" class="w-8 h-8 rounded-full border-2 border-slate-600 bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-sm shadow">2</div>
+                    <div id="valve3" class="w-8 h-8 rounded-full border-2 border-slate-600 bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-sm shadow">3</div>
+                </div>
+                <span id="fingeringText" class="text-xs font-semibold text-amber-400 ml-1">Offen (0)</span>
+            </div>
+        </div>
+
+        <!-- Live Audio Pitch & Tuner Box -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-2 px-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Echtzeit Stimmgerät</span>
+                <span id="liveHz" class="text-xs font-mono text-slate-400">0.0 Hz</span>
+            </div>
+
+            <!-- Tuner Meter Gauge -->
+            <div class="w-full max-w-md h-12 bg-slate-950 rounded-xl border border-slate-800 relative flex items-center justify-center overflow-hidden my-1">
+                <div class="absolute w-1 h-full bg-emerald-500 z-10"></div>
+                <div class="absolute w-16 h-full bg-emerald-500/10 border-x border-emerald-500/30"></div>
+
+                <div class="w-full flex justify-between px-6 text-[10px] text-slate-600 font-mono absolute top-1">
+                    <span>-50</span>
+                    <span>-20</span>
+                    <span class="text-emerald-500 font-bold">0</span>
+                    <span>+20</span>
+                    <span>+50</span>
+                </div>
+
+                <div id="tunerNeedle" class="tuner-needle absolute top-0 bottom-0 w-1 bg-amber-400 z-20 shadow-lg shadow-amber-400/50 opacity-20" style="transform: translateX(0px);"></div>
+            </div>
+
+            <!-- Recognized Note Info -->
+            <div class="flex items-center justify-between w-full max-w-md px-2 mt-1">
+                <div class="flex items-baseline gap-2">
+                    <span class="text-xs text-slate-400">Erkannt:</span>
+                    <span id="detectedNoteDisplay" class="text-lg font-bold text-slate-200">--</span>
+                </div>
+                <div id="centsDisplay" class="text-xs font-mono font-bold px-2 py-1 rounded bg-slate-800 text-slate-400">
+                    0 Cents
+                </div>
+            </div>
+
+            <!-- Mic Controls -->
+            <div class="w-full max-w-xs mt-3">
+                <button id="micToggleBtn" class="w-full py-3 px-6 rounded-xl font-bold text-base flex items-center justify-center gap-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition-all">
+                    <i class="fa-solid fa-microphone text-lg"></i>
+                    <span>Mikrofon Starten</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-2 text-center text-[11px] text-slate-500">
+        Trumpet Master &bull; Bb & C Trompeten Noten- & Tonleiter-Trainer
+    </footer>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-amber-500"></i> Einstellungen
+                </h3>
+                <button id="closeSettingsBtn" class="text-slate-400 hover:text-slate-200 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Trompeten-Stimmung</label>
+                    <select id="settingInstrument" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="Bb">B♭ - Standard Trompete (Klingt 2 Halbtöne tiefer)</option>
+                        <option value="C">C - Trompete (Klingt wie notiert)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Notenbereich (Einzelnoten-Modus)</label>
+                    <select id="settingRange" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="beginner">Anfänger (c1 bis g1)</option>
+                        <option value="intermediate" selected>Mittel (c1 bis c2)</option>
+                        <option value="advanced">Fortgeschritten (c1 bis g2)</option>
+                        <option value="full">Profi (g bis c3)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Notennamen Schreibweise</label>
+                    <select id="settingNotation" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="german">Deutsch (C, D, E, F, G, A, H / B)</option>
+                        <option value="international">International (C, D, E, F, G, A, Bb, B)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stimm-Toleranz (Cents)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="settingTolerance" min="15" max="45" value="30" class="w-full accent-amber-500">
+                        <span id="toleranceVal" class="font-mono text-amber-400 font-bold w-12 text-right">±30</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="saveSettingsBtn" class="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition">
+                Speichern & Anwenden
+            </button>
+        </div>
+    </div>
+
+    <!-- Android Build Info Modal -->
+    <div id="androidModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-brands fa-android text-emerald-400"></i> Als Android App (Capacitor)
+                </h3>
+                <button id="closeAndroidBtn" class="text-slate-400 hover:text-slate-200 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <strong class="text-amber-400 block mb-1">1. Projekt-Setup:</strong>
+                    <code class="text-emerald-400 font-mono block bg-slate-900 p-2 rounded mt-1 overflow-x-auto">
+                        npm init -y<br>
+                        npm install @capacitor/core @capacitor/cli @capacitor/android
+                    </code>
+                </div>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <strong class="text-amber-400 block mb-1">2. Ordnerstruktur:</strong>
+                    <p class="text-slate-400 mb-1">Erstelle den Ordner <code class="text-amber-300">www/</code> und speichere diese Datei als <code class="text-amber-300">www/index.html</code>.</p>
+                </div>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <strong class="text-amber-400 block mb-1">3. APK bauen:</strong>
+                    <code class="text-emerald-400 font-mono block bg-slate-900 p-2 rounded mt-1 overflow-x-auto">
+                        npx cap init "Trumpet Master" "com.trumpet.master"<br>
+                        npx cap add android<br>
+                        npx cap copy<br>
+                        npx cap open android
+                    </code>
+                </div>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <strong class="text-amber-400 block mb-1">4. Mikrofon-Berechtigung:</strong>
+                    <p class="text-slate-400">Füge in <code class="text-amber-300">android/app/src/main/AndroidManifest.xml</code> folgendes hinzu:</p>
+                    <code class="text-sky-300 font-mono block bg-slate-900 p-1.5 rounded mt-1">&lt;uses-permission android:name="android.permission.RECORD_AUDIO" /&gt;</code>
+                </div>
+            </div>
+
+            <button id="closeAndroidBtn2" class="w-full mt-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition">
+                Schließen
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Script Engine -->
+    <script>
+        /**
+         * TRUMPET MASTER ENGINE - Full Self-Contained Web App
+         */
+
+        // --- FULL CHROMATIC NOTE TABLE (Sounding Frequencies & Trumpet Fingering) ---
+        // Stave pos: 0 = middle line (B4), positive = steps up, negative = steps down
+        const CHROMATIC_NOTES = [
+            { id: "F3",  nameGb: "F3",  nameDe: "F",   freq: 174.61, valves: "1-3",   stavePos: -6, acc: "" },
+            { id: "FS3", nameGb: "F#3", nameDe: "Fis", freq: 185.00, valves: "1-2-3", stavePos: -6, acc: "♯" },
+            { id: "G3",  nameGb: "G3",  nameDe: "G",   freq: 196.00, valves: "1-3",   stavePos: -5, acc: "" },
+            { id: "GS3", nameGb: "G#3", nameDe: "Gis", freq: 207.65, valves: "2-3",   stavePos: -5, acc: "♯" },
+            { id: "A3",  nameGb: "A3",  nameDe: "A",   freq: 220.00, valves: "1-2",   stavePos: -4, acc: "" },
+            { id: "AS3", nameGb: "A#3", nameDe: "B",   freq: 233.08, valves: "1",     stavePos: -4, acc: "♭" },
+            { id: "B3",  nameGb: "B3",  nameDe: "H",   freq: 246.94, valves: "2",     stavePos: -3, acc: "" },
+            
+            // Standard Range (c1 - c2)
+            { id: "C4",  nameGb: "C4",  nameDe: "c1",  freq: 261.63, valves: "0",     stavePos: -2, acc: "" }, // Ledger line 1 below
+            { id: "CS4", nameGb: "C#4", nameDe: "cis1",freq: 277.18, valves: "1-2-3", stavePos: -2, acc: "♯" },
+            { id: "D4",  nameGb: "D4",  nameDe: "d1",  freq: 293.66, valves: "1-3",   stavePos: -1, acc: "" },
+            { id: "DS4", nameGb: "D#4", nameDe: "dis1",freq: 311.13, valves: "2-3",   stavePos: -1, acc: "♯" },
+            { id: "E4",  nameGb: "E4",  nameDe: "e1",  freq: 329.63, valves: "1-2",   stavePos: 0,  acc: "" }, // Bottom line
+            { id: "F4",  nameGb: "F4",  nameDe: "f1",  freq: 349.23, valves: "1",     stavePos: 1,  acc: "" },
+            { id: "FS4", nameGb: "F#4", nameDe: "fis1",freq: 369.99, valves: "2",     stavePos: 1,  acc: "♯" },
+            { id: "G4",  nameGb: "G4",  nameDe: "g1",  freq: 392.00, valves: "0",     stavePos: 2,  acc: "" },
+            { id: "GS4", nameGb: "G#4", nameDe: "gis1",freq: 415.30, valves: "2-3",   stavePos: 2,  acc: "♯" },
+            { id: "A4",  nameGb: "A4",  nameDe: "a1",  freq: 440.00, valves: "1-2",   stavePos: 3,  acc: "" },
+            { id: "AS4", nameGb: "A#4", nameDe: "b1",  freq: 466.16, valves: "1",     stavePos: 3,  acc: "♭" },
+            { id: "B4",  nameGb: "B4",  nameDe: "h1",  freq: 493.88, valves: "2",     stavePos: 4,  acc: "" },
+            { id: "C5",  nameGb: "C5",  nameDe: "c2",  freq: 523.25, valves: "0",     stavePos: 5,  acc: "" },
+            
+            // Upper Register (c2 - c3)
+            { id: "CS5", nameGb: "C#5", nameDe: "cis2",freq: 554.37, valves: "1-2",   stavePos: 5,  acc: "♯" },
+            { id: "D5",  nameGb: "D5",  nameDe: "d2",  freq: 587.33, valves: "1",     stavePos: 6,  acc: "" },
+            { id: "DS5", nameGb: "D#5", nameDe: "dis2",freq: 622.25, valves: "2",     stavePos: 6,  acc: "♯" },
+            { id: "E5",  nameGb: "E5",  nameDe: "e2",  freq: 659.25, valves: "0",     stavePos: 7,  acc: "" },
+            { id: "F5",  nameGb: "F5",  nameDe: "f2",  freq: 698.46, valves: "1",     stavePos: 8,  acc: "" },
+            { id: "FS5", nameGb: "F#5", nameDe: "fis2",freq: 739.99, valves: "2",     stavePos: 8,  acc: "♯" },
+            { id: "G5",  nameGb: "G5",  nameDe: "g2",  freq: 783.99, valves: "0",     stavePos: 9,  acc: "" },
+            { id: "GS5", nameGb: "G#5", nameDe: "gis2",freq: 830.61, valves: "2-3",   stavePos: 9,  acc: "♯" },
+            { id: "A5",  nameGb: "A5",  nameDe: "a2",  freq: 880.00, valves: "1-2",   stavePos: 10, acc: "" },
+            { id: "AS5", nameGb: "A#5", nameDe: "b2",  freq: 932.33, valves: "1",     stavePos: 10, acc: "♭" },
+            { id: "B5",  nameGb: "B5",  nameDe: "h2",  freq: 987.77, valves: "2",     stavePos: 11, acc: "" },
+            { id: "C6",  nameGb: "C6",  nameDe: "c3",  freq: 1046.50,valves: "0",     stavePos: 12, acc: "" }
+        ];
+
+        // --- SCALE INTERVAL DEFINITIONS ---
+        const SCALE_DEFINITIONS = {
+            major: [0, 2, 4, 5, 7, 9, 11, 12],
+            natural_minor: [0, 2, 3, 5, 7, 8, 10, 12],
+            harmonic_minor: [0, 2, 3, 5, 7, 8, 11, 12],
+            melodic_minor: [0, 2, 3, 5, 7, 9, 11, 12],
+            major_pentatonic: [0, 2, 4, 7, 9, 12],
+            minor_pentatonic: [0, 3, 5, 7, 10, 12],
+            blues: [0, 3, 5, 6, 7, 10, 12],
+            chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        };
+
+        const ROOT_NOTES = [
+            { name: "C", indexInTable: 7 },   // C4 (c1)
+            { name: "D♭ / C♯", indexInTable: 8 },
+            { name: "D", indexInTable: 9 },
+            { name: "E♭ / D♯", indexInTable: 10 },
+            { name: "E", indexInTable: 11 },
+            { name: "F", indexInTable: 12 },
+            { name: "F♯ / G♭", indexInTable: 13 },
+            { name: "G", indexInTable: 14 },
+            { name: "A♭ / G♯", indexInTable: 15 },
+            { name: "A", indexInTable: 16 },
+            { name: "B♭ / A♯", indexInTable: 17 },
+            { name: "H / B", indexInTable: 18 }
+        ];
+
+        // --- STATE ---
+        const state = {
+            mode: 'single',        // 'single' or 'scale'
+            tuning: 'Bb',          // 'Bb' or 'C'
+            range: 'intermediate',  // 'beginner', 'intermediate', 'advanced', 'full'
+            notationStyle: 'german',
+            toleranceCents: 30,
+            displayMode: 'sheet',  // 'sheet' or 'name'
+
+            score: 0,
+            streak: 0,
+
+            // Pitch Audio Engine
+            isListening: false,
+            audioCtx: null,
+            analyser: null,
+            micStream: null,
+            animFrameId: null,
+
+            // Target
+            currentTarget: null,     // { sounding, written }
+            
+            // Scale Trainer State
+            scaleRootIndex: 7,       // Default C4
+            scaleType: 'major',
+            scaleNotesList: [],      // Array of targets
+            scaleCurrentIdx: 0,
+
+            // Hold note timer
+            holdStartTime: null,
+            holdDurationRequired: 500
+        };
+
+        // --- DOM CACHE ---
+        const DOM = {
+            modeSingleBtn: document.getElementById('modeSingleBtn'),
+            modeScaleBtn: document.getElementById('modeScaleBtn'),
+            scaleConfigBar: document.getElementById('scaleConfigBar'),
+            scaleRootSelect: document.getElementById('scaleRootSelect'),
+            scaleTypeSelect: document.getElementById('scaleTypeSelect'),
+            resetScaleBtn: document.getElementById('resetScaleBtn'),
+            scaleStepsContainer: document.getElementById('scaleStepsContainer'),
+
+            viewSheetBtn: document.getElementById('viewSheetBtn'),
+            viewNameBtn: document.getElementById('viewNameBtn'),
+            sheetContainer: document.getElementById('sheetContainer'),
+            textNoteContainer: document.getElementById('textNoteContainer'),
+            targetNoteText: document.getElementById('targetNoteText'),
+            targetNoteSub: document.getElementById('targetNoteSub'),
+            musicSvg: document.getElementById('musicSvg'),
+
+            valve1: document.getElementById('valve1'),
+            valve2: document.getElementById('valve2'),
+            valve3: document.getElementById('valve3'),
+            fingeringText: document.getElementById('fingeringText'),
+
+            liveHz: document.getElementById('liveHz'),
+            tunerNeedle: document.getElementById('tunerNeedle'),
+            detectedNoteDisplay: document.getElementById('detectedNoteDisplay'),
+            centsDisplay: document.getElementById('centsDisplay'),
+            holdProgressBar: document.getElementById('holdProgressBar'),
+            scoreDisplay: document.getElementById('scoreDisplay'),
+            streakDisplay: document.getElementById('streakDisplay'),
+            tuningDisplay: document.getElementById('tuningDisplay'),
+            micToggleBtn: document.getElementById('micToggleBtn'),
+
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsModal: document.getElementById('settingsModal'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+            saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+            androidInfoBtn: document.getElementById('androidInfoBtn'),
+            androidModal: document.getElementById('androidModal'),
+            closeAndroidBtn: document.getElementById('closeAndroidBtn'),
+            closeAndroidBtn2: document.getElementById('closeAndroidBtn2'),
+
+            settingInstrument: document.getElementById('settingInstrument'),
+            settingRange: document.getElementById('settingRange'),
+            settingNotation: document.getElementById('settingNotation'),
+            settingTolerance: document.getElementById('settingTolerance'),
+            toleranceVal: document.getElementById('toleranceVal')
+        };
+
+        // --- TRANSPOSITION HELPER ---
+        function getWrittenNote(soundingIndex) {
+            const shift = (state.tuning === 'Bb') ? 2 : 0;
+            const writtenIndex = soundingIndex + shift;
+            if (writtenIndex >= 0 && writtenIndex < CHROMATIC_NOTES.length) {
+                return CHROMATIC_NOTES[writtenIndex];
+            }
+            return CHROMATIC_NOTES[soundingIndex];
+        }
+
+        // --- NATIVE SVG MUSIC SHEET NOTATION RENDERER ---
+        /**
+         * Renders high-quality Treble Clef, Stave Lines, Ledger Lines & Notes
+         * Supports either a single note or an entire Scale sequence.
+         */
+        function renderNativeSvgSheet(notesToDraw, activeIndex = 0) {
+            const svg = DOM.musicSvg;
+            svg.innerHTML = ''; // Clear SVG
+
+            const staveYTop = 45;
+            const lineSpacing = 10;
+            const staveWidth = 340;
+            
+            // 1. Draw 5 Stave Lines
+            for (let i = 0; i < 5; i++) {
+                const y = staveYTop + (i * lineSpacing);
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "10");
+                line.setAttribute("y1", y);
+                line.setAttribute("x2", staveWidth - 10);
+                line.setAttribute("y2", y);
+                line.setAttribute("stroke", "#475569");
+                line.setAttribute("stroke-width", "1.5");
+                svg.appendChild(line);
+            }
+
+            // 2. Draw Treble Clef (Violinschlüssel SVG Path)
+            const clefGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            clefGroup.innerHTML = `
+                <path d="M 32 82 C 34 82, 38 80, 38 74 C 38 66, 28 62, 28 50 C 28 35, 40 22, 45 15 C 47 12, 45 10, 43 12 C 38 18, 32 30, 32 44 C 32 54, 39 60, 39 68 C 39 74, 33 78, 27 76 C 22 74, 18 69, 18 63 C 18 55, 25 50, 30 52 C 26 48, 14 55, 14 65 C 14 77, 24 85, 33 85 C 44 85, 48 74, 48 65 C 48 48, 36 32, 42 16 C 43 14, 41 14, 40 16 C 36 28, 44 48, 44 65 C 44 76, 38 83, 32 82 Z" fill="#fbbf24"/>
+            `;
+            svg.appendChild(clefGroup);
+
+            if (!notesToDraw || notesToDraw.length === 0) return;
+
+            // Compute positions for notes
+            const startX = 75;
+            const availableW = staveWidth - startX - 25;
+            const noteSpacing = notesToDraw.length > 1 ? availableW / (notesToDraw.length - 1) : 0;
+
+            // Stave line Y positions reference:
+            // stavePos 0 = E4 (bottom line, y = 85)
+            // Each stavePos unit step is half lineSpacing (5px)
+            const bottomLineY = staveYTop + (4 * lineSpacing); // 85px
+
+            notesToDraw.forEach((targetItem, idx) => {
+                const noteObj = targetItem.written;
+                const x = (notesToDraw.length === 1) ? 175 : startX + (idx * noteSpacing);
+                
+                // Calculate notehead Y position
+                // E4 (stavePos 0) = bottomLineY (85)
+                const y = bottomLineY - (noteObj.stavePos * (lineSpacing / 2));
+                
+                const isActive = (idx === activeIndex);
+                const noteColor = isActive ? "#fbbf24" : "#64748b";
+                const stemColor = isActive ? "#f59e0b" : "#475569";
+
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+                // 3. Draw Ledger Lines if out of stave
+                // Bottom line is E4 (pos 0), Top line is F5 (pos 8)
+                if (noteObj.stavePos <= -2) { // C4 or lower
+                    for (let p = -2; p >= noteObj.stavePos; p -= 2) {
+                        const ly = bottomLineY - (p * (lineSpacing / 2));
+                        const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        l.setAttribute("x1", x - 12);
+                        l.setAttribute("y1", ly);
+                        l.setAttribute("x2", x + 12);
+                        l.setAttribute("y2", ly);
+                        l.setAttribute("stroke", noteColor);
+                        l.setAttribute("stroke-width", "1.5");
+                        g.appendChild(l);
+                    }
+                } else if (noteObj.stavePos >= 10) { // A5 or higher
+                    for (let p = 10; p <= noteObj.stavePos; p += 2) {
+                        const ly = bottomLineY - (p * (lineSpacing / 2));
+                        const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        l.setAttribute("x1", x - 12);
+                        l.setAttribute("y1", ly);
+                        l.setAttribute("x2", x + 12);
+                        l.setAttribute("y2", ly);
+                        l.setAttribute("stroke", noteColor);
+                        l.setAttribute("stroke-width", "1.5");
+                        g.appendChild(l);
+                    }
+                }
+
+                // 4. Draw Accidental (♯ or ♭) if present
+                if (noteObj.acc) {
+                    const accText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    accText.setAttribute("x", x - 16);
+                    accText.setAttribute("y", y + 5);
+                    accText.setAttribute("fill", noteColor);
+                    accText.setAttribute("font-size", "16");
+                    accText.setAttribute("font-weight", "bold");
+                    accText.textContent = noteObj.acc;
+                    g.appendChild(accText);
+                }
+
+                // 5. Draw Notehead (Rotated Ellipse)
+                const ellipse = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+                ellipse.setAttribute("cx", x);
+                ellipse.setAttribute("cy", y);
+                ellipse.setAttribute("rx", "6.5");
+                ellipse.setAttribute("ry", "4.8");
+                ellipse.setAttribute("fill", noteColor);
+                ellipse.setAttribute("transform", `rotate(-20 ${x} ${y})`);
+                if (isActive) {
+                    ellipse.setAttribute("stroke", "#ffffff");
+                    ellipse.setAttribute("stroke-width", "1");
+                }
+                g.appendChild(ellipse);
+
+                // 6. Draw Note Stem
+                const stem = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                const stemUp = noteObj.stavePos < 4; // Stem up if below middle line B4
+                const stemX = stemUp ? x + 5.5 : x - 5.5;
+                const stemY2 = stemUp ? y - 28 : y + 28;
+
+                stem.setAttribute("x1", stemX);
+                stem.setAttribute("y1", y);
+                stem.setAttribute("x2", stemX);
+                stem.setAttribute("y2", stemY2);
+                stem.setAttribute("stroke", stemColor);
+                stem.setAttribute("stroke-width", "1.8");
+                g.appendChild(stem);
+
+                svg.appendChild(g);
+            });
+        }
+
+        // --- RENDER TARGET & FINGERING ---
+        function renderCurrentTarget() {
+            if (!state.currentTarget) return;
+
+            const written = state.currentTarget.written;
+            const sounding = state.currentTarget.sounding;
+
+            // Render Valves
+            const valves = written.valves;
+            DOM.fingeringText.textContent = (valves === "0") ? "Offen (0)" : `Ventile: ${valves}`;
+
+            [DOM.valve1, DOM.valve2, DOM.valve3].forEach(v => {
+                v.className = "w-8 h-8 rounded-full border-2 border-slate-600 bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-sm shadow";
+            });
+
+            if (valves.includes('1')) {
+                DOM.valve1.className = "w-8 h-8 rounded-full border-2 border-amber-400 bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-lg shadow-amber-500/30";
+            }
+            if (valves.includes('2')) {
+                DOM.valve2.className = "w-8 h-8 rounded-full border-2 border-amber-400 bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-lg shadow-amber-500/30";
+            }
+            if (valves.includes('3')) {
+                DOM.valve3.className = "w-8 h-8 rounded-full border-2 border-amber-400 bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-lg shadow-amber-500/30";
+            }
+
+            // Render Text Note Name
+            const noteName = (state.notationStyle === 'german') ? written.nameDe : written.nameGb;
+            DOM.targetNoteText.textContent = noteName;
+            DOM.targetNoteSub.textContent = (state.tuning === 'Bb')
+                ? `(Klingend: ${sounding.nameGb})`
+                : `(C-Trompete)`;
+
+            // Render SVG Sheet Notation
+            if (state.mode === 'single') {
+                renderNativeSvgSheet([state.currentTarget], 0);
+            } else {
+                renderNativeSvgSheet(state.scaleNotesList, state.scaleCurrentIdx);
+                renderScaleBadges();
+            }
+        }
+
+        // Render Scale Step Badges at the bottom of sheet
+        function renderScaleBadges() {
+            DOM.scaleStepsContainer.innerHTML = '';
+            state.scaleNotesList.forEach((item, idx) => {
+                const badge = document.createElement('div');
+                const name = (state.notationStyle === 'german') ? item.written.nameDe : item.written.nameGb;
+                
+                if (idx === state.scaleCurrentIdx) {
+                    badge.className = "px-2.5 py-1 rounded-lg text-xs font-black bg-amber-500 text-slate-950 shadow";
+                } else if (idx < state.scaleCurrentIdx) {
+                    badge.className = "px-2 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                } else {
+                    badge.className = "px-2 py-1 rounded-lg text-xs font-medium bg-slate-950 text-slate-500 border border-slate-800";
+                }
+                badge.textContent = name;
+                DOM.scaleStepsContainer.appendChild(badge);
+            });
+        }
+
+        // --- SINGLE NOTE TRAINER LOGIC ---
+        function getFilteredNotePool() {
+            let startName = "C4"; let endName = "C5";
+            if (state.range === 'beginner') { startName = "C4"; endName = "G4"; }
+            else if (state.range === 'intermediate') { startName = "C4"; endName = "C5"; }
+            else if (state.range === 'advanced') { startName = "C4"; endName = "G5"; }
+            else if (state.range === 'full') { startName = "G3"; endName = "C6"; }
+
+            const startIndex = CHROMATIC_NOTES.findIndex(n => n.nameGb === startName);
+            const endIndex = CHROMATIC_NOTES.findIndex(n => n.nameGb === endName);
+            const shift = (state.tuning === 'Bb') ? 2 : 0;
+            const pool = [];
+
+            for (let i = 0; i < CHROMATIC_NOTES.length; i++) {
+                const writtenIndex = i + shift;
+                if (writtenIndex >= startIndex && writtenIndex <= endIndex) {
+                    pool.push({
+                        sounding: CHROMATIC_NOTES[i],
+                        written: CHROMATIC_NOTES[writtenIndex]
+                    });
+                }
+            }
+            return pool;
+        }
+
+        function pickNextSingleNote() {
+            const pool = getFilteredNotePool();
+            let next = pool[Math.floor(Math.random() * pool.length)];
+            if (state.currentTarget && pool.length > 1) {
+                while (next.written.nameGb === state.currentTarget.written.nameGb) {
+                    next = pool[Math.floor(Math.random() * pool.length)];
+                }
+            }
+            state.currentTarget = next;
+            renderCurrentTarget();
+        }
+
+        // --- SCALE TRAINER LOGIC ---
+        function generateScaleNotes() {
+            const rootWrittenIdx = parseInt(DOM.scaleRootSelect.value, 10);
+            const intervals = SCALE_DEFINITIONS[state.scaleType] || SCALE_DEFINITIONS.major;
+            const shift = (state.tuning === 'Bb') ? 2 : 0;
+
+            const scaleList = [];
+            intervals.forEach(interval => {
+                const writtenIdx = rootWrittenIdx + interval;
+                const soundingIdx = writtenIdx - shift;
+
+                if (writtenIdx < CHROMATIC_NOTES.length && soundingIdx >= 0) {
+                    scaleList.push({
+                        sounding: CHROMATIC_NOTES[soundingIdx],
+                        written: CHROMATIC_NOTES[writtenIdx]
+                    });
+                }
+            });
+
+            state.scaleNotesList = scaleList;
+            state.scaleCurrentIdx = 0;
+            if (scaleList.length > 0) {
+                state.currentTarget = scaleList[0];
+            }
+            renderCurrentTarget();
+        }
+
+        // --- AUDIO PITCH DETECTION ENGINE (Autocorrelation) ---
+        function autoCorrelate(buf, sampleRate) {
+            const SIZE = buf.length;
+            let rms = 0;
+            for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+            rms = Math.sqrt(rms / SIZE);
+
+            if (rms < 0.02) return -1; // Noise threshold
+
+            let r1 = 0, r2 = SIZE - 1;
+            const thres = 0.2;
+            for (let i = 0; i < SIZE / 2; i++) {
+                if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+            }
+            for (let i = 1; i < SIZE / 2; i++) {
+                if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+            }
+
+            buf = buf.slice(r1, r2);
+            const c = new Array(buf.length).fill(0);
+
+            for (let i = 0; i < buf.length; i++) {
+                for (let j = 0; j < buf.length - i; j++) {
+                    c[i] = c[i] + buf[j] * buf[j + i];
+                }
+            }
+
+            let d = 0;
+            while (c[d] > c[d + 1]) d++;
+
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < buf.length; i++) {
+                if (c[i] > maxval) {
+                    maxval = c[i];
+                    maxpos = i;
+                }
+            }
+
+            let T0 = maxpos;
+            const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+            const a = (x1 + x3 - 2 * x2) / 2;
+            const b = (x3 - x1) / 2;
+            if (a) T0 = T0 - b / (2 * a);
+
+            return sampleRate / T0;
+        }
+
+        function getNoteFromFrequency(freq) {
+            let minDiff = Infinity;
+            let closestIndex = -1;
+
+            for (let i = 0; i < CHROMATIC_NOTES.length; i++) {
+                const diff = Math.abs(CHROMATIC_NOTES[i].freq - freq);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = i;
+                }
+            }
+
+            if (closestIndex === -1) return null;
+
+            const targetFreq = CHROMATIC_NOTES[closestIndex].freq;
+            const cents = Math.round(1200 * Math.log2(freq / targetFreq));
+
+            return {
+                soundingNote: CHROMATIC_NOTES[closestIndex],
+                soundingIndex: closestIndex,
+                writtenNote: getWrittenNote(closestIndex),
+                cents: cents,
+                freq: freq
+            };
+        }
+
+        function processAudio() {
+            if (!state.isListening) return;
+
+            const buffer = new Float32Array(2048);
+            state.analyser.getFloatTimeDomainData(buffer);
+            const pitch = autoCorrelate(buffer, state.audioCtx.sampleRate);
+
+            if (pitch !== -1 && pitch >= 140 && pitch <= 1200) {
+                const detected = getNoteFromFrequency(pitch);
+                updateTunerUI(detected);
+                checkTargetMatch(detected);
+            } else {
+                updateTunerUI(null);
+                resetHoldProgress();
+            }
+
+            state.animFrameId = requestAnimationFrame(processAudio);
+        }
+
+        function updateTunerUI(detected) {
+            if (!detected) {
+                DOM.liveHz.textContent = "0.0 Hz";
+                DOM.detectedNoteDisplay.textContent = "--";
+                DOM.centsDisplay.textContent = "0 Cents";
+                DOM.centsDisplay.className = "text-xs font-mono font-bold px-2 py-1 rounded bg-slate-800 text-slate-400";
+                DOM.tunerNeedle.style.opacity = "0.2";
+                DOM.tunerNeedle.style.transform = `translateX(0px)`;
+                return;
+            }
+
+            DOM.liveHz.textContent = `${detected.freq.toFixed(1)} Hz`;
+            const written = detected.writtenNote;
+            const noteName = (state.notationStyle === 'german') ? written.nameDe : written.nameGb;
+            DOM.detectedNoteDisplay.textContent = `${noteName} (${detected.soundingNote.nameGb})`;
+
+            const maxPx = 140;
+            const centsClamped = Math.max(-50, Math.min(50, detected.cents));
+            const posX = (centsClamped / 50) * maxPx;
+
+            DOM.tunerNeedle.style.opacity = "1";
+            DOM.tunerNeedle.style.transform = `translateX(${posX}px)`;
+
+            const absCents = Math.abs(detected.cents);
+            DOM.centsDisplay.textContent = `${detected.cents > 0 ? '+' : ''}${detected.cents} Cents`;
+
+            if (absCents <= 15) {
+                DOM.centsDisplay.className = "text-xs font-mono font-bold px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                DOM.tunerNeedle.className = "tuner-needle absolute top-0 bottom-0 w-1.5 bg-emerald-400 z-20 shadow-lg shadow-emerald-400/80";
+            } else if (absCents <= state.toleranceCents) {
+                DOM.centsDisplay.className = "text-xs font-mono font-bold px-2 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                DOM.tunerNeedle.className = "tuner-needle absolute top-0 bottom-0 w-1 bg-amber-400 z-20 shadow-lg shadow-amber-400/50";
+            } else {
+                DOM.centsDisplay.className = "text-xs font-mono font-bold px-2 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                DOM.tunerNeedle.className = "tuner-needle absolute top-0 bottom-0 w-1 bg-rose-500 z-20 shadow-lg shadow-rose-500/50";
+            }
+        }
+
+        // --- WIN / SUCCESS LOGIC ---
+        function checkTargetMatch(detected) {
+            if (!state.currentTarget || !detected) {
+                resetHoldProgress();
+                return;
+            }
+
+            const targetSoundingGb = state.currentTarget.sounding.nameGb;
+            const detectedSoundingGb = detected.soundingNote.nameGb;
+
+            const isCorrect = (targetSoundingGb === detectedSoundingGb);
+            const isInTune = Math.abs(detected.cents) <= state.toleranceCents;
+
+            if (isCorrect && isInTune) {
+                const now = Date.now();
+                if (!state.holdStartTime) state.holdStartTime = now;
+
+                const elapsed = now - state.holdStartTime;
+                const progressPct = Math.min(100, (elapsed / state.holdDurationRequired) * 100);
+                DOM.holdProgressBar.style.width = `${progressPct}%`;
+
+                if (elapsed >= state.holdDurationRequired) {
+                    handleNoteSuccess();
+                }
+            } else {
+                resetHoldProgress();
+            }
+        }
+
+        function resetHoldProgress() {
+            state.holdStartTime = null;
+            DOM.holdProgressBar.style.width = '0%';
+        }
+
+        function handleNoteSuccess() {
+            resetHoldProgress();
+            playSuccessAudio();
+
+            state.score += 10;
+            state.streak += 1;
+            DOM.scoreDisplay.textContent = state.score;
+            DOM.streakDisplay.innerHTML = `${state.streak} <i class="fa-solid fa-fire text-base text-amber-500"></i>`;
+
+            if (state.mode === 'single') {
+                pickNextSingleNote();
+            } else {
+                // Scale mode logic: step to next note in scale
+                state.scaleCurrentIdx++;
+                if (state.scaleCurrentIdx >= state.scaleNotesList.length) {
+                    // Completed full scale!
+                    state.score += 50; // Bonus points for full scale
+                    DOM.scoreDisplay.textContent = state.score;
+                    state.scaleCurrentIdx = 0;
+                }
+                state.currentTarget = state.scaleNotesList[state.scaleCurrentIdx];
+                renderCurrentTarget();
+            }
+        }
+
+        function playSuccessAudio() {
+            if (!state.audioCtx) return;
+            try {
+                const osc = state.audioCtx.createOscillator();
+                const gain = state.audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, state.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, state.audioCtx.currentTime + 0.12);
+
+                gain.gain.setValueAtTime(0.12, state.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, state.audioCtx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(state.audioCtx.destination);
+                osc.start();
+                osc.stop(state.audioCtx.currentTime + 0.12);
+            } catch (e) {}
+        }
+
+        // --- MIC TOGGLE ---
+        async function toggleMicrophone() {
+            if (state.isListening) {
+                state.isListening = false;
+                if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
+                if (state.micStream) {
+                    state.micStream.getTracks().forEach(t => t.stop());
+                }
+                DOM.micToggleBtn.innerHTML = `<i class="fa-solid fa-microphone text-lg"></i><span>Mikrofon Starten</span>`;
+                DOM.micToggleBtn.className = "w-full py-3 px-6 rounded-xl font-bold text-base flex items-center justify-center gap-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition-all";
+                updateTunerUI(null);
+            } else {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    state.audioCtx = new AudioContext();
+                    state.micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+                    });
+
+                    const source = state.audioCtx.createMediaStreamSource(state.micStream);
+                    state.analyser = state.audioCtx.createAnalyser();
+                    state.analyser.fftSize = 2048;
+                    source.connect(state.analyser);
+
+                    state.isListening = true;
+                    DOM.micToggleBtn.innerHTML = `<i class="fa-solid fa-microphone-slash text-lg"></i><span>Mikrofon Stoppen</span>`;
+                    DOM.micToggleBtn.className = "w-full py-3 px-6 rounded-xl font-bold text-base flex items-center justify-center gap-3 bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 active:scale-95 transition-all";
+
+                    processAudio();
+                } catch (err) {
+                    alert("Mikrofon-Zugriff fehlgeschlagen: " + err.message);
+                }
+            }
+        }
+
+        // --- INITIALIZATION & EVENTS ---
+        function initRootSelectOptions() {
+            DOM.scaleRootSelect.innerHTML = '';
+            ROOT_NOTES.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.indexInTable;
+                opt.textContent = r.name;
+                DOM.scaleRootSelect.appendChild(opt);
+            });
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            if (mode === 'single') {
+                DOM.modeSingleBtn.className = "py-2 rounded-lg text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 shadow transition flex items-center justify-center gap-2";
+                DOM.modeScaleBtn.className = "py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2";
+                DOM.scaleConfigBar.classList.add('hidden');
+                DOM.scaleStepsContainer.classList.add('hidden');
+                pickNextSingleNote();
+            } else {
+                DOM.modeScaleBtn.className = "py-2 rounded-lg text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 shadow transition flex items-center justify-center gap-2";
+                DOM.modeSingleBtn.className = "py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-2";
+                DOM.scaleConfigBar.classList.remove('hidden');
+                DOM.scaleStepsContainer.classList.remove('hidden');
+                generateScaleNotes();
+            }
+        }
+
+        function setupEventListeners() {
+            DOM.modeSingleBtn.addEventListener('click', () => setMode('single'));
+            DOM.modeScaleBtn.addEventListener('click', () => setMode('scale'));
+
+            DOM.scaleRootSelect.addEventListener('change', generateScaleNotes);
+            DOM.scaleTypeSelect.addEventListener('change', (e) => {
+                state.scaleType = e.target.value;
+                generateScaleNotes();
+            });
+            DOM.resetScaleBtn.addEventListener('click', generateScaleNotes);
+
+            DOM.viewSheetBtn.addEventListener('click', () => {
+                DOM.viewSheetBtn.className = "px-3 py-1 rounded-lg bg-amber-500 text-slate-950 shadow font-bold";
+                DOM.viewNameBtn.className = "px-3 py-1 rounded-lg text-slate-400 hover:text-slate-200";
+                DOM.sheetContainer.classList.remove('hidden');
+                DOM.textNoteContainer.classList.add('hidden');
+            });
+
+            DOM.viewNameBtn.addEventListener('click', () => {
+                DOM.viewNameBtn.className = "px-3 py-1 rounded-lg bg-amber-500 text-slate-950 shadow font-bold";
+                DOM.viewSheetBtn.className = "px-3 py-1 rounded-lg text-slate-400 hover:text-slate-200";
+                DOM.sheetContainer.classList.add('hidden');
+                DOM.textNoteContainer.classList.remove('hidden');
+            });
+
+            DOM.micToggleBtn.addEventListener('click', toggleMicrophone);
+
+            DOM.settingsBtn.addEventListener('click', () => DOM.settingsModal.classList.remove('hidden'));
+            DOM.closeSettingsBtn.addEventListener('click', () => DOM.settingsModal.classList.add('hidden'));
+            DOM.androidInfoBtn.addEventListener('click', () => DOM.androidModal.classList.remove('hidden'));
+            DOM.closeAndroidBtn.addEventListener('click', () => DOM.androidModal.classList.add('hidden'));
+            DOM.closeAndroidBtn2.addEventListener('click', () => DOM.androidModal.classList.add('hidden'));
+
+            DOM.settingTolerance.addEventListener('input', (e) => {
+                DOM.toleranceVal.textContent = `±${e.target.value}`;
+            });
+
+            DOM.saveSettingsBtn.addEventListener('click', () => {
+                state.tuning = DOM.settingInstrument.value;
+                state.range = DOM.settingRange.value;
+                state.notationStyle = DOM.settingNotation.value;
+                state.toleranceCents = parseInt(DOM.settingTolerance.value, 10);
+
+                DOM.tuningDisplay.textContent = state.tuning === 'Bb' ? 'B♭ (Bb)' : 'C-Trompete';
+                DOM.settingsModal.classList.add('hidden');
+
+                if (state.mode === 'single') pickNextSingleNote();
+                else generateScaleNotes();
+            });
+        }
+
+        window.onload = function() {
+            initRootSelectOptions();
+            setupEventListeners();
+            setMode('single');
+        };
+    </script>
+</body>
+</html>
